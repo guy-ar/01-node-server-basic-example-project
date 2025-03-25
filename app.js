@@ -25,23 +25,31 @@ const server = http.createServer((req, res) => {
         });
 
         // register event listener on end event = will be fired when all data has been read
-        req.on('end', () => {
+        return req.on('end', () => {
             // create new buffer and concatenate all chunks into one
             const parsedBody = Buffer.concat(body).toString();
             console.log(parsedBody);
             // extract message from parsedBody - witout the property name
             const message = parsedBody.split('=')[1];
             // write message to a file
-            fs.writeFileSync('message.txt', message);
+            fs.writeFile('message.txt', message, (err) => {
+                // set status code
+                res.statusCode = 302;
+                // set header to redirect user to the root page
+                res.setHeader('Location', '/');
+                return res.end();
+            })
         });
-
-        // redirect user to the root page
-        res.statusCode = 302;
-        // default header that is accepted by the browser
-        res.setHeader('Location', '/');
-        return res.end();
     }
 
+    // attach header to response
+    res.setHeader('Content-Type', 'text/html');
+    // write response
+    res.write('<html>');
+    res.write('<head><title>My first page</title></head>');
+    res.write('<body><h1>Hello from my Node.js Server!</h1></body>');
+    res.write('</html>');
+    res.end();
 });
 
 // start the server and listen on port 3000 to incoming requests
